@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import FormField from '../../components/FormField';
 import CustomButton from '../../components/CustomButton';
 import { useRouter } from 'expo-router';
 import { Link } from 'expo-router';
+import api from '../../api'; // Import the Axios instance
 
 interface FormState {
   email: string;
@@ -16,14 +18,20 @@ const SignIn: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const submit = () => {
+  const submit = async () => {
     setIsSubmitting(true);
-    // Handle form submission logic here
-    router.push({
-      pathname: "/info",
-      params: { email: form.email, password: form.password },
-    });
-    setIsSubmitting(false);
+    try {
+      const response = await api.post('/signin', { email: form.email, password: form.password });
+      const { token } = response.data;
+      await AsyncStorage.setItem('token', token);
+      Alert.alert('Success', 'Signed in successfully');
+      router.push('/info'); // Navigate to the desired screen after sign-in
+    } catch (error) {
+      console.error('Error signing in:', error);
+      Alert.alert('Error', 'Invalid email or password');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,6 +53,7 @@ const SignIn: React.FC = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
+            secureTextEntry
           />
           <CustomButton 
             title="Sign In"

@@ -1,30 +1,44 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import FormField from '../../components/FormField';
 import CustomButton from '../../components/CustomButton';
 import { useRouter } from 'expo-router';
 import { Link } from 'expo-router';
+import api from '../../api'; // Import the Axios instance
 
 interface FormState {
-  username: string,
+  username: string;
   email: string;
   password: string;
+  description: string;
 }
 
 const SignUp: React.FC = () => {
-  const [form, setForm] = useState<FormState>({ username: '', email: '', password: '' });
+  const [form, setForm] = useState<FormState>({ username: '', email: '', password: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const submit = () => {
+  const submit = async () => {
     setIsSubmitting(true);
-    // Handle form submission logic here
-    router.push({
-      pathname: "/info",
-      params: { username: form.username,email: form.email, password: form.password },
-    });
-    setIsSubmitting(false);
+    try {
+      const response = await api.post('/user', {
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        description: form.description
+      });
+      const { token } = response.data;
+      await AsyncStorage.setItem('token', token);
+      Alert.alert('Success', 'Signed up successfully');
+      router.push('/info'); // Navigate to the desired screen after sign-up
+    } catch (error) {
+      console.error('Error signing up:', error);
+      Alert.alert('Error', 'Failed to sign up');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -39,7 +53,6 @@ const SignUp: React.FC = () => {
             value={form.username}
             handleChangeText={(e) => setForm({ ...form, username: e })}
             otherStyles="mt-7"
-            
           />
           <FormField 
             title="Email"
@@ -53,6 +66,13 @@ const SignUp: React.FC = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
+            secureTextEntry
+          />
+          <FormField 
+            title="Description"
+            value={form.description}
+            handleChangeText={(e) => setForm({ ...form, description: e })}
+            otherStyles="mt-7"
           />
           <CustomButton 
             title="Sign Up"
@@ -62,7 +82,7 @@ const SignUp: React.FC = () => {
           />
           <View className="justify-center pt-5 flex-row gap-2">
             <Text className="text-lg text-gray-100 font-pregular">
-              Have already ann account?
+              Have already an account?
             </Text>
             <Link href="/(auth)/sign-in" className="text-lg font-psemibold text-secondary">
               Log in

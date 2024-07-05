@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { ActivityIndicator, View, StyleSheet, Animated } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -16,22 +16,15 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  const fadeAnim = new Animated.Value(0);
-
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
     }
   }, [loaded]);
 
   if (!loaded) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -39,11 +32,20 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Animated.View className="flex-1" style={{ opacity: fadeAnim }}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-        </Stack>
-      </Animated.View>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false }} />
+        
+      </Stack>
     </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

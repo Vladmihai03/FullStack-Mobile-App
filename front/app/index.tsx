@@ -3,6 +3,7 @@ import React from 'react'
 import images from '../constants/Colors'
 import { StatusBar } from 'expo-status-bar'
 import CustomButton from '@/components/CustomButton'
+import {Redirect, router} from 'expo-router'
 
 const App = () => {
   return (
@@ -11,7 +12,7 @@ const App = () => {
       source={images.homepage} 
       className="flex-1 items-center justify-center opacity-80" 
       resizeMode='cover'>
-        <CustomButton title="Welcome"  handlePress={()=>{}} containerStyles="w-50 mt-7" />
+        <CustomButton title="Welcome"  handlePress={()=>router.push('/sign-in')} containerStyles="w-50 mt-7" />
       </ImageBackground>
       <StatusBar  backgroundColor='#161622' style='light'/>
     </View>

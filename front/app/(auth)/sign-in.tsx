@@ -38,7 +38,7 @@ const SignIn: React.FC = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className="w-full justify-center min-h-[65vh] px-4 my-6">
-          <Text className="text-2xl text-white text-semibold mt-5 mb-5 font-psemibold">
+          <Text className="text-2xl text-white text-semibold mt-5 mb-5 ">
             Log in
           </Text>
           <FormField 
@@ -53,7 +53,7 @@ const SignIn: React.FC = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
-            secureTextEntry
+            
           />
           <CustomButton 
             title="Sign In"
@@ -62,10 +62,10 @@ const SignIn: React.FC = () => {
             isloading={isSubmitting}
           />
           <View className="justify-center pt-5 flex-row gap-2">
-            <Text className="text-lg text-gray-100 font-pregular">
+            <Text className="text-lg text-gray-100 ">
               Don't have an account?
             </Text>
-            <Link href="/(auth)/sign-up" className="text-lg font-psemibold text-secondary">
+            <Link href="/(auth)/sign-up" className="text-lg  text-secondary">
               Sign Up
             </Link>
           </View>

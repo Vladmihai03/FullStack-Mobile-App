@@ -24,7 +24,7 @@ export default function RootLayout() {
 
   if (!loaded) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className='flex-1 justify-center items-center'>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -42,10 +42,4 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+

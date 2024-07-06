@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TextInputProps } from "react-native";
+import { View, Text, TextInput, TextInputProps, TouchableOpacity } from "react-native";
 
 interface FormFieldProps extends TextInputProps {
   title: string;
@@ -30,17 +30,17 @@ const FormField: React.FC<FormFieldProps> = ({
           placeholder={placeholder}
           placeholderTextColor="#7B7B8B"
           onChangeText={handleChangeText}
+          autoCapitalize="none"
           secureTextEntry={title === "Password" && !showPassword}
           {...props}
         />
 
         {title === 'Password' && (
-          <Text
-            className="text-blue-500 text-sm font-medium"
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? "Hide" : "Show"}
-          </Text>
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Text className="text-blue-500 text-sm font-medium">
+              {showPassword ? "Hide" : "Show"}
+            </Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>

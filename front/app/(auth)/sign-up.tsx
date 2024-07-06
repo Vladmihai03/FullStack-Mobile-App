@@ -45,7 +45,7 @@ const SignUp: React.FC = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className="w-full justify-center min-h-[65vh] px-4 my-6">
-          <Text className="text-2xl text-white text-semibold mt-5 mb-5 font-psemibold">
+          <Text className="text-2xl text-white text-semibold mt-5 mb-5 ">
             Register
           </Text>
           <FormField 
@@ -81,10 +81,10 @@ const SignUp: React.FC = () => {
             isloading={isSubmitting}
           />
           <View className="justify-center pt-5 flex-row gap-2">
-            <Text className="text-lg text-gray-100 font-pregular">
+            <Text className="text-lg text-gray-100 ">
               Have already an account?
             </Text>
-            <Link href="/(auth)/sign-in" className="text-lg font-psemibold text-secondary">
+            <Link href="/(auth)/sign-in" className="text-lg  text-secondary">
               Log in
             </Link>
           </View>

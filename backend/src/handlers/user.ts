@@ -10,7 +10,7 @@ export const createNewUser = async (req: Request, res: Response) => {
     const connection = await connectToDatabase();
     
     await connection.execute(
-      'INSERT INTO users (username, email, password, description) VALUES (?, ?, ?, ?)',
+      'INSERT INTO user (username, email, password, description) VALUES (?, ?, ?, ?)',
       [username, email, hashedPassword, description]
     );
 
@@ -27,7 +27,7 @@ export const signin = async (req: Request, res: Response) => {
 
   try {
     const connection = await connectToDatabase();
-    const [rows] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
+    const [rows] = await connection.execute('SELECT * FROM user WHERE email = ?', [email]);
     const user = (rows as any)[0];
 
     if (!user) {
@@ -48,6 +48,29 @@ export const signin = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteUser = async (req: Request, res: Response)=>{
+  const {email} = req.body;
+  try{
+    const connection = connectToDatabase();
+    if(email == 'popicavlas@gmail.com'){
+      res.status(401).json({message: 'Can not delete the admin'});
+    }
+    (await connection).execute('DELETE  FROM user WHERE EMAIL = ?', [email]);
+    res.status(200).json({message: 'DELETED'});
+  }catch(e){
+    res.status(401).json({message: 'Invalid email to delete'})
+  }
+}
+
+export const listAllUsers = async(req: Request, res: Response) => {
+  const connection = await connectToDatabase();
+  const [rows] = await connection.execute('SELECT username, email, description FROM user');
+  if(!rows){
+    return res.status(401).json({ message: 'No users to display' });
+  }
+  res.json((rows as any));
+}
+
 export const verifyUser = async (req: AuthenticatedRequest, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
@@ -55,7 +78,7 @@ export const verifyUser = async (req: AuthenticatedRequest, res: Response) => {
 
   try {
     const connection = await connectToDatabase();
-    const [rows] = await connection.execute('SELECT username, email, description FROM users WHERE email = ?', [req.user.email]);
+    const [rows] = await connection.execute('SELECT username, email, description FROM user WHERE email = ?', [req.user.email]);
     const user = (rows as any)[0];
 
     if (!user) {
@@ -83,12 +106,12 @@ export const updateDescription = async (req: AuthenticatedRequest, res: Response
   try {
     const connection = await connectToDatabase();
     await connection.execute(
-      'UPDATE users SET description = ? WHERE email = ?',
+      'UPDATE user SET description = ? WHERE email = ?',
       [description, req.user.email]
     );
 
     const [rows] = await connection.execute(
-      'SELECT username, email, description FROM users WHERE email = ?',
+      'SELECT username, email, description FROM user WHERE email = ?',
       [req.user.email]
     );
     const user = (rows as any)[0];

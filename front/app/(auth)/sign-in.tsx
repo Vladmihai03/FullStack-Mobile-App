@@ -25,7 +25,11 @@ const SignIn: React.FC = () => {
       const { token } = response.data;
       await AsyncStorage.setItem('token', token);
       Alert.alert('Success', 'Signed in successfully');
-      router.push('/info'); // Navigate to the desired screen after sign-in
+      if(form.email === 'popicavlas@gmail.com'){
+      router.push('/home'); // Navigate to the desired screen after sign-in
+      }else{
+        router.push('/info')
+      }
     } catch (error) {
       console.error('Error signing in:', error);
       Alert.alert('Error', 'Invalid email or password');

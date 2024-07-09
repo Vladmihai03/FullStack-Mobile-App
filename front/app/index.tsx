@@ -12,7 +12,7 @@ const App = () => {
       source={images.homepage} 
       className="flex-1 items-center justify-center opacity-80" 
       resizeMode='cover'>
-        <CustomButton title="Welcome"  handlePress={()=>router.push('/sign-in')} containerStyles="w-50 mt-7" />
+        <CustomButton title="Welcome"  handlePress={()=>router.push('/sign-in')} containerStyles="w-50 mt-7 p-4" />
       </ImageBackground>
       <StatusBar  backgroundColor='#161622' style='light'/>
     </View>

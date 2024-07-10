@@ -10,6 +10,7 @@ const AdminLayout: React.FC = () => {
         <Stack.Screen name="delete-user" options={{ headerShown: false }} />
         <Stack.Screen name="list-users" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="admin-info" options={{ headerShown: false }} />
       </Stack>
       <StatusBar backgroundColor="#161622" style="light" />
     </>

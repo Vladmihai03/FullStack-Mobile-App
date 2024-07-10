@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import api from '@/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from '@/components/CustomButton';
@@ -41,16 +41,30 @@ const ListUsers: React.FC = () => {
     }, [])
   );
 
+  const handlePress = async (email: string) => {
+    try {
+      await AsyncStorage.setItem('selectedEmail', email);
+      router.push('/admin-info');
+    } catch (error) {
+      console.error('Error setting email:', error);
+      Alert.alert('Error', 'Failed to store selected email');
+    }
+  };
+
   return (
     <View className="flex-1 bg-gray-100 p-4">
       <Text className="text-2xl font-extrabold text-gray-800 mb-10 text-center mt-20">List of Users</Text>
       <ScrollView className="w-full">
         {users.map((user, index) => (
-          <View key={index} className="bg-white p-4 mb-4 rounded-lg shadow-md">
-            <Text className="text-lg font-bold text-gray-800 ">{user.username}</Text>
+          <TouchableOpacity
+            key={index}
+            className="bg-white p-4 mb-4 rounded-lg shadow-md"
+            onPress={() => handlePress(user.email)}
+          >
+            <Text className="text-lg font-bold text-gray-800">{user.username}</Text>
             <Text className="text-sm text-gray-600 my-1">{user.email}</Text>
             <Text className="text-sm text-gray-600">{user.description}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
       <CustomButton 

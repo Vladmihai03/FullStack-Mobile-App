@@ -64,7 +64,8 @@ export const deleteUser = async (req: Request, res: Response)=>{
 
 export const listAllUsers = async(req: Request, res: Response) => {
   const connection = await connectToDatabase();
-  const [rows] = await connection.execute('SELECT username, email, description FROM user');
+  const email = 'popicavlas@gmail.com'
+  const [rows] = await connection.execute('SELECT username, email, description FROM user WHERE email != ?', [email]);
   if(!rows){
     return res.status(401).json({ message: 'No users to display' });
   }

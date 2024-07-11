@@ -68,8 +68,8 @@ const ListUsers: React.FC = () => {
         ))}
       </ScrollView>
       <CustomButton 
-        title="Admin Page"
-        handlePress={() => router.push('/home')}
+        title="Home"
+        handlePress={() => router.push('/')}
         containerStyles="mt-10 p-3 rounded-lg shadow-md my-5"
         textStyles="text-white text-lg font-bold"
       />

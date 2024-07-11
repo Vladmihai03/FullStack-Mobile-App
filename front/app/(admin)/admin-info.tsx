@@ -12,39 +12,41 @@ interface UserProfile {
 }
 
 const AdminInfo: React.FC = () => {
-  const [email, setEmail] = useState("");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newDescription, setNewDescription] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const storedEmail = await AsyncStorage.getItem('selectedEmail');
-        if (!storedEmail) {
-          throw new Error('No email found');
-        }
-        setEmail(storedEmail);
-
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          throw new Error('No token found');
-        }
-
-        const response = await api.get(`/profile`, {
+  const fetchProfile = async () => {
+    try {
+      const storedEmail = await AsyncStorage.getItem('selectedEmail');
+      if (!storedEmail) {
+        throw new Error('No email found');
+      }
+  
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+  
+      const response = await api.post('/profile-user', 
+        { email: storedEmail }, // Trimiterea emailului în corpul cererii
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-        setProfile(response.data);
-        setNewDescription(response.data.description);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        Alert.alert('Error', 'Failed to load profile');
-      }
-    };
-
+        }
+      );
+  
+      setProfile(response.data);
+      setNewDescription(response.data.description);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      Alert.alert('Error', 'Failed to load profile');
+    }
+  };
+  
+  useEffect(() => {
     fetchProfile();
   }, []);
 
@@ -103,11 +105,6 @@ const AdminInfo: React.FC = () => {
 
   return (
     <View className="flex-1 bg-primary justify-center items-center p-5">
-      {email && (
-        <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
-          <Text className="font-bold">Email:</Text> {email}
-        </Text>
-      )}
       {profile ? (
         <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md">
           <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
@@ -152,7 +149,7 @@ const AdminInfo: React.FC = () => {
       )}
       <CustomButton 
         title="Home"
-        handlePress={() => router.push('/home')}
+        handlePress={() => router.push('/')}
         containerStyles="mt-7 w-full bg-green-500 text-white"
       />
     </View>

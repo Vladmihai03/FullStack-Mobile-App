@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
+import { connectToDatabase } from '../database/connect';
 
 dotenv.config();
 
@@ -17,8 +18,13 @@ interface User {
   email: string;
 }
 
-export const createJWT = (user: User): string => {
-  const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET as string);
+export const createJWT = async (user: User): Promise<string> => {
+  const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+
+  
+  const connection = await connectToDatabase();
+  await connection.execute('UPDATE user SET current_token = ? WHERE email = ?', [token, user.email]);
+
   return token;
 };
 
@@ -26,54 +32,66 @@ interface AuthenticatedRequest extends Request {
   user?: { email: string };
 }
 
-export const protect = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const protect = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const bearer = req.headers.authorization;
 
   if (!bearer) {
-    res.status(401).json({ message: 'not authorized' });
-    return;
+    return res.status(401).json({ message: 'Not authorized' });
   }
   
   const [, token] = bearer.split(" ");
   if (!token) {
-    res.status(401).json({ message: 'not authorized' });
-    return;
+    return res.status(401).json({ message: 'Not authorized' });
   }
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET as string) as { email: string };
     req.user = payload;
+
+    const connection = await connectToDatabase();
+    const [rows]: any = await connection.execute('SELECT current_token FROM user WHERE email = ?', [payload.email]);
+    const user = rows[0];
+
     
+    if (user.current_token && user.current_token !== token) {
+      return res.status(401).json({ message: 'You are already logged in from another device' });
+    }
+
+    
+    if (!user.current_token) {
+      await connection.execute('UPDATE user SET current_token = ? WHERE email = ?', [token, payload.email]);
+    }
+
     next();
   } catch (e) {
     console.error(e);
-    res.status(401).json({ message: 'not authorized' });
+    res.status(401).json({ message: 'Not authorized' });
   }
 };
 
-export const isAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const bearer = req.headers.authorization;
-  if(!bearer){
-    res.status(401).json({ message: 'not authorized' });
-    return;
+export const isAdmin = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Not authorized' });
   }
-  const [,token] = bearer.split(" ");
-  if(!token){
-    res.status(401).json({ message: 'not authorized' });
-    return;
-  }
-  try{
-    const result = jwt.verify(token, process.env.JWT_SECRET as string) as {email: string};
-    req.user = result;
-    if(req.user.email != 'popicavlas@gmail.com'){
-      res.status(401).json({ message: 'not authorized' });
-      return;
-    }
-    next();
-  }catch(e){
-    res.status(401).json({ message: 'not authorized' });
-    return;
-  }
-}
 
-export {AuthenticatedRequest}
+  try {
+    const connection = await connectToDatabase();
+    const [rows]: any = await connection.execute('SELECT email FROM user WHERE email = ?', [req.user.email]);
+    const user = rows[0];
+
+    if (user.email !== 'popicavlas@gmail.com') {
+      return res.status(403).json({ message: 'Forbidden: Admins only' });
+    }
+
+    next();
+  } catch (e) {
+    console.error(e);
+    res.status(401).json({ message: 'Not authorized' });
+  }
+};
+
+
+
+export {
+  AuthenticatedRequest
+}

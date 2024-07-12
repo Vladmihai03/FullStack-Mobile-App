@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { createJWT, hashPassword, comparePasswords, AuthenticatedRequest } from '../modules/auth';
 import { connectToDatabase } from '../database/connect';
 
+
 export const createNewUser = async (req: Request, res: Response) => {
   const { username, email, password, description } = req.body;
 
@@ -14,7 +15,7 @@ export const createNewUser = async (req: Request, res: Response) => {
       [username, email, hashedPassword, description]
     );
 
-    const token = createJWT({ email });
+    const token = await createJWT({ email });
     res.status(201).json({ token });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -27,8 +28,8 @@ export const signin = async (req: Request, res: Response) => {
 
   try {
     const connection = await connectToDatabase();
-    const [rows] = await connection.execute('SELECT * FROM user WHERE email = ?', [email]);
-    const user = (rows as any)[0];
+    const [rows]: any = await connection.execute('SELECT * FROM user WHERE email = ?', [email]);
+    const user = rows[0];
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -40,7 +41,13 @@ export const signin = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = createJWT({ email: user.email });
+    // Check if the user already has an active session
+    if (user.current_token) {
+      return res.status(400).json({ message: 'You are already logged in' });
+    }
+
+    // Create a new JWT and update the current token
+    const token = await createJWT({ email: user.email });
     res.json({ token });
   } catch (error) {
     console.error("Error signing in:", error);
@@ -142,5 +149,20 @@ export const updateDescription = async (req: AuthenticatedRequest, res: Response
   } catch (error) {
     console.error("Error updating description:", error);
     res.status(500).json({ message: 'Error updating description' });
+  }
+};
+
+export const logoutUser = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Not authorized' });
+  }
+
+  try {
+    const connection = await connectToDatabase();
+    await connection.execute('UPDATE user SET current_token = NULL WHERE email = ?', [req.user.email]);
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error("Error logging out:", error);
+    res.status(500).json({ message: 'Error logging out' });
   }
 };

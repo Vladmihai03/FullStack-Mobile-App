@@ -71,6 +71,29 @@ const Info: React.FC = () => {
     }
   };
 
+  const homeFunction = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      await api.post(
+        '/logout',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      await AsyncStorage.removeItem('token');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Error', 'Failed to log out');
+    }
+  };
+
   return (
     <View className="flex-1 bg-primary justify-center items-center p-5">
       {profile ? (
@@ -112,7 +135,7 @@ const Info: React.FC = () => {
       )}
       <CustomButton 
         title="Home"
-        handlePress={(): void => {}}
+        handlePress={homeFunction}
         containerStyles="mt-7 w-full bg-green-500 text-white"
         linkTo='/'
       />

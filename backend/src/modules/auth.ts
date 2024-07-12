@@ -54,6 +54,7 @@ export const protect = async (req: AuthenticatedRequest, res: Response, next: Ne
 
     
     if (user.current_token && user.current_token !== token) {
+      console.log('yes');
       return res.status(401).json({ message: 'You are already logged in from another device' });
     }
 

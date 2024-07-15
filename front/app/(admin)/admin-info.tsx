@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Alert, TextInput } from 'react-native';
+import { View, Text, Alert, TextInput, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from '@/components/CustomButton';
-import api from '../../api'; 
+import api from '../../api';
 import { useRouter } from 'expo-router';
 
 interface UserProfile {
@@ -13,53 +13,70 @@ interface UserProfile {
 
 const AdminInfo: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [editField, setEditField] = useState<string | null>(null);
+  const [newUsername, setNewUsername] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   const fetchProfile = async () => {
+    setIsLoading(true);
     try {
       const storedEmail = await AsyncStorage.getItem('selectedEmail');
       if (!storedEmail) {
         throw new Error('No email found');
       }
-  
+
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
-  
-      const response = await api.post('/profile-user', 
-        { email: storedEmail }, // Trimiterea emailului în corpul cererii
+
+      const response = await api.post(
+        '/profile-user',
+        { email: storedEmail },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-  
+
       setProfile(response.data);
+      setNewUsername(response.data.username);
+      setNewEmail(response.data.email);
       setNewDescription(response.data.description);
     } catch (error) {
       console.error('Error fetching profile:', error);
       Alert.alert('Error', 'Failed to load profile');
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchProfile();
   }, []);
 
-  const handleEditDescription = async () => {
+  const handleSaveChanges = async () => {
+    setIsLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
 
+      const updatedProfile: UserProfile = {
+        username: newUsername,
+        email: newEmail,
+        description: newDescription,
+      };
+
       await api.put(
-        '/description',
-        { email: profile?.email, description: newDescription },
+        '/update-profile',
+        updatedProfile,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -67,21 +84,19 @@ const AdminInfo: React.FC = () => {
         }
       );
 
-      setProfile((prevProfile) =>
-        prevProfile
-          ? { ...prevProfile, description: newDescription }
-          : null
-      );
-
-      setIsEditing(false);
-      Alert.alert('Success', 'Description updated successfully');
+      setProfile(updatedProfile);
+      setEditField(null);
+      Alert.alert('Success', 'Profile updated successfully');
     } catch (error) {
-      console.error('Error updating description:', error);
-      Alert.alert('Error', 'Failed to update description');
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteUser = async () => {
+    setIsDeleting(true);
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
@@ -100,6 +115,8 @@ const AdminInfo: React.FC = () => {
     } catch (error) {
       console.error('Error deleting user:', error);
       Alert.alert('Error', 'Failed to delete user');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -120,7 +137,7 @@ const AdminInfo: React.FC = () => {
         }
       );
       await AsyncStorage.removeItem('token');
-      router.push('/'); 
+      router.push('/');
     } catch (error) {
       console.error('Error logging out:', error);
       Alert.alert('Error', 'Failed to log out');
@@ -129,52 +146,108 @@ const AdminInfo: React.FC = () => {
 
   return (
     <View className="flex-1 bg-primary justify-center items-center p-5">
-      {profile ? (
-        <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md">
-          <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
-            <Text className="font-bold">Username:</Text> {profile.username}
-          </Text>
-          <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
-            <Text className="font-bold">Email:</Text> {profile.email}
-          </Text>
-          {isEditing ? (
-            <View>
-              <TextInput
-                className="w-full p-2 border border-gray-300 rounded bg-white text-black mb-4"
-                value={newDescription}
-                onChangeText={setNewDescription}
-              />
-              <CustomButton
-                title="Submit"
-                handlePress={handleEditDescription}
-                containerStyles="mt-2 w-full bg-blue-500 text-white"
-              />
-            </View>
-          ) : (
-            <View>
-              <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
-                <Text className="font-bold">Description:</Text> {profile.description}
-              </Text>
-              <CustomButton
-                title="Edit Description"
-                handlePress={() => setIsEditing(true)}
-                containerStyles="mt-2 w-full bg-blue-500 text-white"
-              />
-            </View>
-          )}
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : profile ? (
+        <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md space-y-4">
+          <View className="mb-4">
+            <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold">Username:</Text>
+            {editField === 'username' ? (
+              <View className="flex-row items-center space-x-2">
+                <TextInput
+                  className="flex-1 p-2 border border-gray-300 rounded bg-white text-black"
+                  value={newUsername}
+                  onChangeText={setNewUsername}
+                />
+                <CustomButton
+                  title="Save"
+                  handlePress={handleSaveChanges}
+                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
+                  isloading={isLoading}
+                />
+              </View>
+            ) : (
+              <View className="flex-row items-center space-x-2">
+                <Text className="text-secondary-200 text-lg flex-1" style={{ color: '#ccc', fontSize: 18 }}>{profile.username}</Text>
+                <CustomButton
+                  title="Edit"
+                  handlePress={() => setEditField('username')}
+                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
+                />
+              </View>
+            )}
+          </View>
+
+          <View className="mb-4">
+            <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold">Email:</Text>
+            {editField === 'email' ? (
+              <View className="flex-row items-center space-x-2">
+                <TextInput
+                  className="flex-1 p-2 border border-gray-300 rounded bg-white text-black"
+                  value={newEmail}
+                  onChangeText={setNewEmail}
+                />
+                <CustomButton
+                  title="Save"
+                  handlePress={handleSaveChanges}
+                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
+                  isloading={isLoading}
+                />
+              </View>
+            ) : (
+              <View className="flex-row items-center space-x-2">
+                <Text className="text-secondary-200 text-lg flex-1" style={{ color: '#ccc', fontSize: 18 }}>{profile.email}</Text>
+                <CustomButton
+                  title="Edit"
+                  handlePress={() => setEditField('email')}
+                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
+                />
+              </View>
+            )}
+          </View>
+
+          <View className="mb-4">
+            <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold">Description:</Text>
+            {editField === 'description' ? (
+              <View className="flex-row items-center space-x-2">
+                <TextInput
+                  className="flex-1 p-2 border border-gray-300 rounded bg-white text-black"
+                  value={newDescription}
+                  onChangeText={setNewDescription}
+                />
+                <CustomButton
+                  title="Save"
+                  handlePress={handleSaveChanges}
+                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
+                  isloading={isLoading}
+                />
+              </View>
+            ) : (
+              <View className="flex-row items-center space-x-2">
+                <Text className="text-secondary-200 text-lg flex-1" style={{ color: '#ccc', fontSize: 18 }}>{profile.description}</Text>
+                <CustomButton
+                  title="Edit"
+                  handlePress={() => setEditField('description')}
+                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
+                />
+              </View>
+            )}
+          </View>
+
           <CustomButton
             title="Delete User"
             handlePress={handleDeleteUser}
-            containerStyles="mt-4 w-full bg-red-500 text-white"
+            containerStyles="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded-full"
+            isloading={isDeleting}
           />
         </View>
       ) : (
         <Text className="text-secondary-200 text-lg mb-4">Loading...</Text>
       )}
-      <CustomButton 
+      <CustomButton
         title="Home"
         handlePress={homeFunction}
-        containerStyles="mt-7 w-full bg-green-500 text-white"
+        containerStyles="mt-7 w-full bg-green-500 text-white px-4 py-2 rounded-full"
       />
     </View>
   );

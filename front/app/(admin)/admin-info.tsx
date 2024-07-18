@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 
 interface UserProfile {
   username: string;
-  email: string;
   description: string;
 }
 
@@ -15,7 +14,6 @@ const AdminInfo: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editField, setEditField] = useState<string | null>(null);
   const [newUsername, setNewUsername] = useState('');
-  const [newEmail, setNewEmail] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -46,7 +44,6 @@ const AdminInfo: React.FC = () => {
 
       setProfile(response.data);
       setNewUsername(response.data.username);
-      setNewEmail(response.data.email);
       setNewDescription(response.data.description);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -68,21 +65,37 @@ const AdminInfo: React.FC = () => {
         throw new Error('No token found');
       }
 
+      const storedEmail = await AsyncStorage.getItem('selectedEmail');
+      if (!storedEmail) {
+        throw new Error('No email found');
+      }
+
       const updatedProfile: UserProfile = {
         username: newUsername,
-        email: newEmail,
         description: newDescription,
       };
 
-      await api.put(
-        '/update-profile',
-        updatedProfile,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      if (editField === 'username') {
+        await api.put(
+          '/update-username',
+          { username: newUsername, email: storedEmail },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } else if (editField === 'description') {
+        await api.put(
+          '/update-description',
+          { description: newDescription, email: storedEmail },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
 
       setProfile(updatedProfile);
       setEditField(null);
@@ -103,8 +116,13 @@ const AdminInfo: React.FC = () => {
         throw new Error('No token found');
       }
 
+      const storedEmail = await AsyncStorage.getItem('selectedEmail');
+      if (!storedEmail) {
+        throw new Error('No email found');
+      }
+
       await api.delete('/delete-user', {
-        data: { email: profile?.email },
+        data: { email: storedEmail },
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -146,6 +164,13 @@ const AdminInfo: React.FC = () => {
 
   return (
     <View className="flex-1 bg-primary justify-center items-center p-5">
+      <View className="absolute top-10 left-5">
+          <CustomButton
+            title="Back to User List"
+            handlePress={() => router.push('/list-users')}
+            containerStyles="bg-primary text-white px-4 py-2 mt-10 rounded-full border border-blue-500"
+          />
+      </View>
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : profile ? (
@@ -172,34 +197,6 @@ const AdminInfo: React.FC = () => {
                 <CustomButton
                   title="Edit"
                   handlePress={() => setEditField('username')}
-                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
-                />
-              </View>
-            )}
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold">Email:</Text>
-            {editField === 'email' ? (
-              <View className="flex-row items-center space-x-2">
-                <TextInput
-                  className="flex-1 p-2 border border-gray-300 rounded bg-white text-black"
-                  value={newEmail}
-                  onChangeText={setNewEmail}
-                />
-                <CustomButton
-                  title="Save"
-                  handlePress={handleSaveChanges}
-                  containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
-                  isloading={isLoading}
-                />
-              </View>
-            ) : (
-              <View className="flex-row items-center space-x-2">
-                <Text className="text-secondary-200 text-lg flex-1" style={{ color: '#ccc', fontSize: 18 }}>{profile.email}</Text>
-                <CustomButton
-                  title="Edit"
-                  handlePress={() => setEditField('email')}
                   containerStyles="bg-blue-500 text-white px-4 py-2 rounded-full"
                 />
               </View>

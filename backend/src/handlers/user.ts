@@ -118,11 +118,7 @@ export const verifyUser = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 export const updateDescription = async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized: User not authenticated' });
-  }
-
-  const { description } = req.body;
+  const { description, email } = req.body;
 
   if (!description || typeof description !== 'string') {
     return res.status(400).json({ message: 'Invalid description' });
@@ -132,12 +128,12 @@ export const updateDescription = async (req: AuthenticatedRequest, res: Response
     const connection = await connectToDatabase();
     await connection.execute(
       'UPDATE user SET description = ? WHERE email = ?',
-      [description, req.user.email]
+      [description, email]
     );
 
     const [rows] = await connection.execute(
       'SELECT username, email, description FROM user WHERE email = ?',
-      [req.user.email]
+      [email]
     );
     const user = (rows as any)[0];
 
@@ -149,6 +145,37 @@ export const updateDescription = async (req: AuthenticatedRequest, res: Response
   } catch (error) {
     console.error("Error updating description:", error);
     res.status(500).json({ message: 'Error updating description' });
+  }
+};
+
+export const updateUsername = async (req: AuthenticatedRequest, res: Response) => {
+  const { username, email } = req.body;
+
+  if (!username || typeof username !== 'string') {
+    return res.status(400).json({ message: 'Invalid description' });
+  }
+
+  try {
+    const connection = await connectToDatabase();
+    await connection.execute(
+      'UPDATE user SET username = ? WHERE email = ?',
+      [username, email]
+    );
+
+    const [rows] = await connection.execute(
+      'SELECT username, email, description FROM user WHERE email = ?',
+      [email]
+    );
+    const user = (rows as any)[0];
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error updating username:", error);
+    res.status(500).json({ message: 'Error updating username' });
   }
 };
 

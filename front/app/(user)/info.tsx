@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Alert, TextInput } from 'react-native';
+import { View, Text, Alert, TextInput, Button, ScrollView, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomButton from '@/components/CustomButton';
-import api from '../../api'; // Import the Axios instance
+import api from '@/api';
 
 interface UserProfile {
   username: string;
@@ -10,136 +10,182 @@ interface UserProfile {
   description: string;
 }
 
+interface VacationRequest {
+  start_date: string;
+  end_date: string;
+  status: string;
+  sent_at: string;
+}
+
 const Info: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [newDescription, setNewDescription] = useState('');
+  const [vacationRequests, setVacationRequests] = useState<VacationRequest[]>([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndRequests = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (!token) {
           throw new Error('No token found');
         }
 
-        const response = await api.get('/profile', {
+        const profileResponse = await api.get('/profile', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        setProfile(response.data);
-        setNewDescription(response.data.description); // Set initial description
+
+        const requestsResponse = await api.get('/userRequests', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setProfile(profileResponse.data);
+        setVacationRequests(requestsResponse.data);
       } catch (error) {
-        console.error('Error fetching profile:', error);
-        Alert.alert('Error', 'Failed to load profile');
+        console.error('Error fetching profile or vacation requests:', error);
+        Alert.alert('Error', 'Failed to load profile or vacation requests');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchProfileAndRequests();
   }, []);
 
-  const handleEditDescription = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      await api.put(
-        '/description',
-        { description: newDescription },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Actualizează profilul local
-      setProfile((prevProfile) =>
-        prevProfile
-          ? { ...prevProfile, description: newDescription }
-          : null
-      );
-
-      setIsEditing(false);
-      Alert.alert('Success', 'Description updated successfully');
-    } catch (error) {
-      console.error('Error updating description:', error);
-      Alert.alert('Error', 'Failed to update description');
+  const handleRequestVacation = async () => {
+    if (!startDate && !endDate) {
+      setShowForm(false);
+      return;
     }
-  };
 
-  const homeFunction = async () => {
+    setSubmitting(true);
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
+
+      const sent_at = new Date().toLocaleDateString('ro-RO');
+
+      console.log("Sending request with start_date:", startDate, "end_date:", endDate, "sent_at:", sent_at);
 
       await api.post(
-        '/logout',
-        {},
+        '/requestVacation',
+        { start_date: startDate, end_date: endDate, sent_at },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      await AsyncStorage.removeItem('token');
+
+      const requestsResponse = await api.get('/userRequests', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setVacationRequests(requestsResponse.data);
+      setStartDate('');
+      setEndDate('');
+      setShowForm(false);
+      Alert.alert('Success', 'Vacation request submitted successfully');
     } catch (error) {
-      console.error('Error logging out:', error);
-      Alert.alert('Error', 'Failed to log out');
+      console.error('Error submitting vacation request:', error);
+      Alert.alert('Error', 'Failed to submit vacation request');
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  if (loading) {
+    return <ActivityIndicator size="large" color="#00ff00" />;
+  }
+
   return (
-    <View className="flex-1 bg-primary justify-center items-center p-5">
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 10, backgroundColor: '#1a1a1a' }}>
       {profile ? (
-        <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md">
-          <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
+        <View className="bg-gray-800 p-4 rounded-md mb-4 w-full max-w-sm">
+          <Text className="text-secondary-200 text-sm mb-2">
             <Text className="font-bold">Username:</Text> {profile.username}
           </Text>
-          <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
+          <Text className="text-secondary-200 text-sm mb-2">
             <Text className="font-bold">Email:</Text> {profile.email}
           </Text>
-          {isEditing ? (
-            <View>
-              <TextInput
-                className="w-full p-2 border border-gray-300 rounded bg-white text-black mb-4"
-                value={newDescription}
-                onChangeText={setNewDescription}
-              />
-              <CustomButton
-                title="Submit"
-                handlePress={handleEditDescription}
-                containerStyles="mt-2 w-full bg-blue-500 text-white"
-              />
-            </View>
-          ) : (
-            <View>
-              <Text className="text-secondary-200 text-lg mb-4 border-b border-gray-700 pb-2">
-                <Text className="font-bold">Description:</Text> {profile.description}
-              </Text>
-              <CustomButton
-                title="Edit Description"
-                handlePress={() => setIsEditing(true)}
-                containerStyles="mt-2 w-full bg-blue-500 text-white"
-              />
-            </View>
-          )}
+          <Text className="text-secondary-200 text-sm">
+            <Text className="font-bold">Description:</Text> {profile.description}
+          </Text>
         </View>
       ) : (
-        <Text className="text-secondary-200 text-lg mb-4">Loading...</Text>
+        <Text className="text-secondary-200 text-sm mb-4">Loading profile...</Text>
       )}
+
+      <View className="bg-gray-800 p-4 rounded-md mb-4 w-full max-w-sm">
+        <Text className="text-secondary-200 text-sm mb-2 font-bold">Vacation Requests</Text>
+        {vacationRequests.length > 0 ? (
+          vacationRequests.map((request, index) => (
+            <View key={index} className="mb-3 bg-gray-700 p-3 rounded-md shadow">
+              <Text className="text-gray-300 text-xs mb-1">
+                <Text className="font-bold">Start Date:</Text> {request.start_date}
+              </Text>
+              <Text className="text-gray-300 text-xs mb-1">
+                <Text className="font-bold">End Date:</Text> {request.end_date}
+              </Text>
+              <Text className="text-gray-300 text-xs mb-1">
+                <Text className="font-bold">Status:</Text> {request.status}
+              </Text>
+              <Text className="text-gray-300 text-xs">
+                <Text className="font-bold">Sent At:</Text> {request.sent_at}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text className="text-secondary-200">No vacation requests available.</Text>
+        )}
+      </View>
+
+      {!showForm && (
+        <CustomButton 
+          title="Add Request"
+          handlePress={() => setShowForm(true)}
+          containerStyles="mt-4 w-full bg-blue-500 text-white"
+        />
+      )}
+
+      {showForm && (
+        <View className="bg-gray-800 p-4 rounded-md w-full max-w-sm mt-4">
+          <Text className="text-secondary-200 text-sm mb-2 font-bold">Request Vacation</Text>
+          <TextInput
+            placeholder="Start Date (DD.MM.YYYY)"
+            value={startDate}
+            onChangeText={setStartDate}
+            className="bg-white p-2 mb-2 rounded text-xs"
+          />
+          <TextInput
+            placeholder="End Date (DD.MM.YYYY)"
+            value={endDate}
+            onChangeText={setEndDate}
+            className="bg-white p-2 mb-2 rounded text-xs"
+          />
+          <Button title="Submit" onPress={handleRequestVacation} disabled={submitting} />
+          {submitting && <ActivityIndicator size="small" color="#00ff00" className="mt-2" />}
+        </View>
+      )}
+
       <CustomButton 
         title="Home"
-        handlePress={homeFunction}
-        containerStyles="mt-7 w-full bg-green-500 text-white"
+        handlePress={() => {}}
+        containerStyles="mt-5 w-full bg-green-500 text-white"
         linkTo='/'
       />
-    </View>
+    </ScrollView>
   );
 };
 

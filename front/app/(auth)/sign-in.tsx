@@ -26,7 +26,7 @@ const SignIn: React.FC = () => {
       await AsyncStorage.setItem('token', token);
       Alert.alert('Success', 'Signed in successfully');
       if(form.email === 'popicavlas@gmail.com'){
-      router.push('/list-users'); // Navigate to the desired screen after sign-in
+      router.push('/home'); // Navigate to the desired screen after sign-in
       }else{
         router.push('/info')
       }

@@ -52,29 +52,6 @@ const ListUsers: React.FC = () => {
   };
 
 
-  const homeFunction = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      await api.post(
-        '/logout',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      await AsyncStorage.removeItem('token');
-      router.push('/'); 
-    } catch (error) {
-      console.error('Error logging out:', error);
-      Alert.alert('Error', 'Failed to log out');
-    }
-  };
 
   return (
     <View className="flex-1 bg-gray-100 p-4">
@@ -94,7 +71,7 @@ const ListUsers: React.FC = () => {
       </ScrollView>
       <CustomButton 
         title="Home"
-        handlePress={homeFunction}
+        handlePress={()=>{router.push('/home')}}
         containerStyles="mt-10 p-3 rounded-lg shadow-md my-5"
         textStyles="text-white text-lg font-bold"
       />

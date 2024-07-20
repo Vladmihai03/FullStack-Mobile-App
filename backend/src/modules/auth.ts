@@ -23,8 +23,6 @@ export const createJWT = async (user: User): Promise<string> => {
 
   
   const connection = await connectToDatabase();
-  await connection.execute('UPDATE user SET current_token = ? WHERE email = ?', [token, user.email]);
-
   return token;
 };
 
@@ -49,19 +47,9 @@ export const protect = async (req: AuthenticatedRequest, res: Response, next: Ne
     req.user = payload;
 
     const connection = await connectToDatabase();
-    const [rows]: any = await connection.execute('SELECT current_token FROM user WHERE email = ?', [payload.email]);
+    const [rows]: any = await connection.execute('SELECT username, email, description FROM user WHERE email = ?', [payload.email]);
     const user = rows[0];
 
-    
-    if (user.current_token && user.current_token !== token) {
-      console.log('yes');
-      return res.status(401).json({ message: 'You are already logged in from another device' });
-    }
-
-    
-    if (!user.current_token) {
-      await connection.execute('UPDATE user SET current_token = ? WHERE email = ?', [token, payload.email]);
-    }
 
     next();
   } catch (e) {

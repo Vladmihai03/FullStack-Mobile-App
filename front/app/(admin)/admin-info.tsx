@@ -243,7 +243,7 @@ const AdminInfo: React.FC = () => {
       )}
       <CustomButton
         title="Home"
-        handlePress={homeFunction}
+        handlePress={()=> {router.push('/home')}}
         containerStyles="mt-7 w-full bg-green-500 text-white px-4 py-2 rounded-full"
       />
     </View>

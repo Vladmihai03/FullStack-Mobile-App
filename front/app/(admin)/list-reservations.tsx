@@ -30,8 +30,6 @@ const ListReservations: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("Reservations data from API:", response.data);
-      // Filtrează rezervările cu statusul "Pending"
       const pendingReservations = response.data.filter((reservation: Reservation) => reservation.STATUS === 'Pending');
       setReservations(pendingReservations);
     } catch (error) {
@@ -46,6 +44,16 @@ const ListReservations: React.FC = () => {
     }, [])
   );
 
+  const handlePress = async (reservation: Reservation) => {
+    try {
+      await AsyncStorage.setItem('selectedReservation', JSON.stringify(reservation));
+      router.push('/reservation-detail');
+    } catch (error) {
+      console.error('Error setting reservation:', error);
+      Alert.alert('Error', 'Failed to store selected reservation');
+    }
+  };
+
   return (
     <View className="flex-1 bg-gray-100 p-4">
       <Text className="text-2xl font-extrabold text-gray-800 mb-10 text-center mt-20">List of Pending Reservations</Text>
@@ -54,6 +62,7 @@ const ListReservations: React.FC = () => {
           <TouchableOpacity
             key={index}
             className="bg-white p-4 mb-4 rounded-lg shadow-md"
+            onPress={() => handlePress(reservation)}
           >
             <Text className="text-lg font-bold text-gray-800">{reservation.EMAIL}</Text>
             <Text className="text-sm text-gray-600 my-1">Start Date: {reservation.START_DATE}</Text>

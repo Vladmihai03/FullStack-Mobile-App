@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import FormField from '../../components/FormField';
-import CustomButton from '../../components/CustomButton';
+import FormField from '@/components/FormField';
+import CustomButton from '@/components/CustomButton';
 import { useRouter } from 'expo-router';
 import { Link } from 'expo-router';
-import api from '../../api'; // Import the Axios instance
+import api from '@/api'; 
 
 interface FormState {
   username: string;
@@ -32,7 +32,7 @@ const SignUp: React.FC = () => {
       const { token } = response.data;
       await AsyncStorage.setItem('token', token);
       Alert.alert('Success', 'Signed up successfully');
-      router.push('/info'); // Navigate to the desired screen after sign-up
+      router.push('/info'); 
     } catch (error) {
       console.error('Error signing up:', error);
       Alert.alert('Error', 'Failed to sign up');

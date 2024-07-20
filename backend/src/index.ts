@@ -24,7 +24,9 @@ app.get('/', (req, res) => {
   const date: Date = {
     year: current_date.getFullYear().toString(),
     month: (current_date.getMonth()+1).toString(),
-    day: current_date.getDate().toString()
+    day: current_date.getDate(
+      
+    ).toString()
   }
   res.send(`Hello World! ${date.day} ${date.month} ${date.year}`);
 });

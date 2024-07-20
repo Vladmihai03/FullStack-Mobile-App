@@ -127,10 +127,10 @@ const Info: React.FC = () => {
         <Text className="text-secondary-200 text-sm mb-4">Loading profile...</Text>
       )}
 
-      <View className="bg-gray-800 p-4 rounded-md mb-4 w-full max-w-sm">
-        <Text className="text-secondary-200 text-sm mb-2 font-bold">Vacation Requests</Text>
-        {vacationRequests.length > 0 ? (
-          vacationRequests.map((request, index) => (
+      {vacationRequests.length > 0 && (
+        <View className="bg-gray-800 p-4 rounded-md mb-4 w-full max-w-sm">
+          <Text className="text-secondary-200 text-sm mb-2 font-bold">Vacation Requests</Text>
+          {vacationRequests.map((request, index) => (
             <View key={index} className="mb-3 bg-gray-700 p-3 rounded-md shadow">
               <Text className="text-gray-300 text-xs mb-1">
                 <Text className="font-bold">Start Date:</Text> {request.start_date}
@@ -145,11 +145,9 @@ const Info: React.FC = () => {
                 <Text className="font-bold">Sent At:</Text> {request.sent_at}
               </Text>
             </View>
-          ))
-        ) : (
-          <Text className="text-secondary-200">No vacation requests available.</Text>
-        )}
-      </View>
+          ))}
+        </View>
+      )}
 
       {!showForm && (
         <CustomButton 

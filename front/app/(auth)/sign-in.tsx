@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import FormField from '../../components/FormField';
-import CustomButton from '../../components/CustomButton';
+import FormField from '@/components/FormField';
+import CustomButton from '@/components/CustomButton';
 import { useRouter } from 'expo-router';
 import { Link } from 'expo-router';
-import api from '../../api'; // Import the Axios instance
+import api from '@/api'; 
 
 interface FormState {
   email: string;
@@ -26,7 +26,7 @@ const SignIn: React.FC = () => {
       await AsyncStorage.setItem('token', token);
       Alert.alert('Success', 'Signed in successfully');
       if(form.email === 'popicavlas@gmail.com'){
-      router.push('/home'); // Navigate to the desired screen after sign-in
+      router.push('/home'); 
       }else{
         router.push('/info')
       }

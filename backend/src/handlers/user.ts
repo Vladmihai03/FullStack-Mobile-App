@@ -204,7 +204,7 @@ export const requestVacation = async (req: AuthenticatedRequest, res: Response) 
   try {
     const connection = await connectToDatabase();
 
-    // Adăugăm un mesaj de debug pentru a vedea datele trimise
+    
     console.log("Checking existing requests for email:", req.user.email, "with start_date:", start_date);
 
     const [existingRequests]: any = await connection.execute(

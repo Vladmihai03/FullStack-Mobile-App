@@ -64,31 +64,54 @@ const ReservationDetail: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-100 p-4 justify-center items-center">
+    <View className="flex-1 bg-primary justify-center items-center p-5">
+      <View className="absolute top-10 left-5">
+        <CustomButton
+          title="Back to Reservations"
+          handlePress={() => router.push('/list-reservations')}
+          containerStyles="bg-primary text-white px-4 py-2 mt-10 rounded-full border border-blue-500"
+        />
+      </View>
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : reservation ? (
-        <View className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-          <Text className="text-lg font-bold text-gray-800 mb-2">Email: {reservation.EMAIL}</Text>
-          <Text className="text-sm text-gray-600 mb-1">Start Date: {reservation.START_DATE}</Text>
-          <Text className="text-sm text-gray-600 mb-1">End Date: {reservation.END_DATE}</Text>
-          <Text className="text-sm text-gray-600 mb-1">Sent At: {reservation.SENT_AT}</Text>
-          <Text className="text-sm text-gray-600 mb-1">Status: {reservation.STATUS}</Text>
+        <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md space-y-3">
+          <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold">Reservation Details:</Text>
+
+          <View>
+            <Text className="text-secondary-200 text-lg mb-1 font-bold">Email:</Text>
+            <Text className="text-secondary-200 text-lg">{reservation.EMAIL}</Text>
+          </View>
+
+          <View>
+            <Text className="text-secondary-200 text-lg mb-1 font-bold">Date:</Text>
+            <Text className="text-secondary-200 text-lg">{reservation.START_DATE} - {reservation.END_DATE}</Text>
+          </View>
+
+          <View className="mb-4">
+            <Text className="text-secondary-200 text-lg mb-1 font-bold">Sent At:</Text>
+            <Text className="text-secondary-200 text-lg">{reservation.SENT_AT}</Text>
+          </View>
+
           <View className="flex-row justify-around mt-4">
-            <CustomButton
-              title="Approve"
-              handlePress={() => handleResponse('Approved')}
-              containerStyles="bg-green-500 text-white px-4 py-2 rounded-full"
-            />
-            <CustomButton
-              title="Deny"
-              handlePress={() => handleResponse('Denied')}
-              containerStyles="bg-red-500 text-white px-4 py-2 rounded-full"
-            />
+            <View className="flex-1 mx-3">
+              <CustomButton
+                title="Approve"
+                handlePress={() => handleResponse('Approved')}
+                containerStyles="bg-green-500 text-white px-4 py-2 rounded-full"
+              />
+            </View>
+            <View className="flex-1 mx-3">
+              <CustomButton
+                title="Deny"
+                handlePress={() => handleResponse('Denied')}
+                containerStyles="bg-red-500 text-white px-4 py-2 rounded-full"
+              />
+            </View>
           </View>
         </View>
       ) : (
-        <Text className="text-gray-800 text-lg">Loading reservation details...</Text>
+        <Text className="text-secondary-200 text-lg">Loading reservation details...</Text>
       )}
     </View>
   );

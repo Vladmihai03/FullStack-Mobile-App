@@ -58,6 +58,7 @@ export const deleteUser = async (req: Request, res: Response)=>{
       res.status(401).json({message: 'Can not delete the admin'});
     }
     (await connection).execute('DELETE  FROM user WHERE EMAIL = ?', [email]);
+    (await connection).execute('DELETE FROM vacation_requests WHERE EMAIL = ?', [email]);
     res.status(200).json({message: 'DELETED'});
   }catch(e){
     res.status(401).json({message: 'Invalid email to delete'})

@@ -28,7 +28,8 @@ const SignIn: React.FC = () => {
       if(form.email === 'popicavlas@gmail.com'){
       router.push('/home'); 
       }else{
-        router.push('/info')
+        router.push('/homee')
+        console.log('da')
       }
     } catch (error) {
       console.error('Error signing in:', error);

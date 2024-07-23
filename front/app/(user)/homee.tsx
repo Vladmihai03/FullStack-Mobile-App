@@ -12,41 +12,26 @@ const Home: React.FC = () => {
     <SafeAreaView className="bg-primary h-full">
       <View className="w-full justify-center min-h-[65vh] px-4 my-6 mt-20">
           <CustomButton 
-            title="List Reservations"
+            title="Details and Requests"
             handlePress={()=> {}}
             containerStyles="mt-7"
             isloading={isSubmitting}
-            linkTo='/list-reservations'
+            linkTo='/info'
           />
           <CustomButton 
-            title="List Users"
+            title="Tasks"
             handlePress={()=> {}}
             containerStyles="mt-7"
             isloading={isSubmitting}
-            linkTo='/list-users'
-          />
-          <CustomButton 
-            title="Task"
-            handlePress={()=> {}}
-            containerStyles="mt-7"
-            isloading={isSubmitting}
-            linkTo='/task'
-          />
-          <CustomButton 
-            title="Chart"
-            handlePress={()=> {}}
-            containerStyles="mt-7"
-            isloading={isSubmitting}
-            linkTo='/statistics'
+            linkTo='/user-task'
           />
           <CustomButton 
             title="HomePage"
             handlePress={()=> {}}
-            containerStyles="mt-10"
+            containerStyles="mt-7"
             isloading={isSubmitting}
             linkTo='/'
           />
-          
       </View>
     </SafeAreaView>
   );

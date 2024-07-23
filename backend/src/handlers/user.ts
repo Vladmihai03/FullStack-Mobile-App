@@ -286,3 +286,80 @@ export const sendResponse = async (req: AuthenticatedRequest, res: Response) => 
 };
 
 
+export const createTask = async (req: AuthenticatedRequest, res: Response) => {
+  const { name, detail, assigned_to } = req.body;
+
+  try {
+      const connection = await connectToDatabase();
+      await connection.execute(
+          'INSERT INTO tasks (name, detail, assigned_to, status) VALUES (?, ?, ?, ?)',
+          [name, detail, assigned_to, 'not done']
+      );
+      res.status(201).json({ message: 'Task created successfully' });
+  } catch (error) {
+      console.error("Error creating task:", error);
+      res.status(500).json({ message: 'Error creating task' });
+  }
+};
+
+export const listUserTasks = async (req: AuthenticatedRequest, res: Response) => {
+  const email = req.user?.email as string;
+
+  try {
+    const connection = await connectToDatabase();
+    const [rows] = await connection.execute(
+      'SELECT * FROM tasks WHERE assigned_to = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)',
+      [email]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ message: 'Error fetching tasks' });
+  }
+};
+
+export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response) => {
+  const { email, status } = req.body;
+
+  if (status !== 'not done' && status !== 'completed') {
+    return res.status(400).json({ message: 'Invalid status' });
+  }
+
+  try {
+    const connection = await connectToDatabase();
+    const [result]: any = await connection.execute(
+      'UPDATE tasks SET status = ? WHERE assigned_to = ?',
+      [status, email]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Task not found or not assigned to you' });
+    }
+
+    res.status(200).json({ message: 'Task status updated' });
+  } catch (error) {
+    console.error('Error updating task status:', error);
+    res.status(500).json({ message: 'Error updating task status' });
+  }
+};
+
+
+export const listAllTasks = async (req: AuthenticatedRequest, res: Response) => {
+  const { email } = req.body; // Assumes email is provided in the request body
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+
+  try {
+    const connection = await connectToDatabase();
+    const [rows] = await connection.execute(
+      'SELECT * FROM tasks WHERE assigned_to = ?',
+      [email]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ message: 'Error fetching tasks' });
+  }
+};
+

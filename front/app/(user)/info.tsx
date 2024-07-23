@@ -150,11 +150,11 @@ const Info: React.FC = () => {
               }
               setShowRequests(!showRequests);
             }}
-            containerStyles="mt-4 w-full bg-blue-500 text-white"
+            containerStyles="mt-10 w-full bg-blue-500 text-white"
           />
 
           {showRequests && vacationRequests.length > 0 && (
-            <View className="bg-gray-800 p-4 rounded-md mb-4 w-full max-w-sm">
+            <View className="bg-gray-800 p-4 rounded-md mb-4 w-full max-w-sm ">
               <Text className="text-secondary-200 text-sm mb-2 font-bold">Vacation Requests</Text>
               {vacationRequests.map((request, index) => (
                 <View key={index} className="mb-3 bg-gray-700 p-3 rounded-md shadow">
@@ -208,8 +208,8 @@ const Info: React.FC = () => {
         <CustomButton 
           title="Home"
           handlePress={() => {}}
-          containerStyles="mt-5 w-full bg-green-500 text-white"
-          linkTo='/'
+          containerStyles="mt-5 w-full bg-green-500 text-white mb-10"
+          linkTo='/homee'
         />
       </View>
     </View>

@@ -19,6 +19,6 @@ router.post('/statusResponse',protect,isAdmin, sendResponse);
 router.post('/tasks', protect, isAdmin, createTask);
 router.get('/tasks', protect, listUserTasks);
 router.put('/tasks', protect, updateTaskStatus);
-router.get('/admin-tasks', protect, isAdmin, listAllTasks);
+router.post('/admin-tasks', protect, isAdmin, listAllTasks);
 
 export default router;

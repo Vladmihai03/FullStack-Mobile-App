@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, Alert, ActivityIndicator, TouchableOpacity, FlatList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomButton from '@/components/CustomButton';
+import api from '@/api';
 import { useRouter } from 'expo-router';
 import Modal from 'react-native-modal';
-import api from '@/api';
-import CustomButton from '@/components/CustomButton';
+import PieChart from 'react-native-pie-chart';
+import { Button, List } from 'react-native-paper';
 
 interface User {
   email: string;
@@ -19,6 +21,7 @@ const UserStats: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const router = useRouter();
 
@@ -47,13 +50,14 @@ const UserStats: React.FC = () => {
   }, []);
 
   const fetchTasks = async (userEmail: string) => {
+    setIsLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         throw new Error('No token found');
       }
 
-      const response = await api.get(`/tasks?assigned_to=${userEmail}`, {
+      const response = await api.post('/admin-tasks', { email: userEmail }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,6 +67,8 @@ const UserStats: React.FC = () => {
     } catch (error) {
       console.error('Error fetching tasks:', error);
       Alert.alert('Error', 'Failed to load tasks');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,6 +80,10 @@ const UserStats: React.FC = () => {
 
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const notDoneTasks = tasks.filter(task => task.status === 'not done').length;
+  const totalTasks = completedTasks + notDoneTasks;
+
+  const series = [completedTasks, notDoneTasks];
+  const sliceColor = ['#22543D', '#7F1D1D']; // green-800 for completed, red-800 for not done
 
   return (
     <View className="flex-1 bg-primary justify-center items-center p-5">
@@ -85,32 +95,60 @@ const UserStats: React.FC = () => {
         />
       </View>
 
-      <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md space-y-3">
-        <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold text-center">Task Stats</Text>
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md space-y-3">
+          <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold text-center">Task Stats</Text>
 
-        <TouchableOpacity
-          className="bg-gray-200 p-2 rounded-lg mb-4"
-          onPress={() => setIsModalVisible(true)}
-        >
-          <Text className="text-black text-lg text-center">{selectedUser ? selectedUser.username : 'Select a user'}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-gray-200 p-2 rounded-lg mb-4"
+            onPress={() => setIsModalVisible(true)}
+          >
+            <Text className="text-secondary-200 text-lg text-center">{selectedUser ? selectedUser.username : 'Select a user'}</Text>
+          </TouchableOpacity>
 
-        {selectedUser && (
-          <View className="bg-gray-800 p-4 rounded-lg">
-            <Text className="text-secondary-200 text-lg mb-4 text-center">Tasks for {selectedUser.username}</Text>
-            <View className="flex-row justify-between mt-4">
-              <View className="items-center">
-                <Text className="text-lg font-bold text-white">{completedTasks}</Text>
-                <Text className="text-secondary-200">Completed</Text>
-              </View>
-              <View className="items-center">
-                <Text className="text-lg font-bold text-white">{notDoneTasks}</Text>
-                <Text className="text-secondary-200">Not Done</Text>
+          {selectedUser && (
+            <View className="bg-gray-800 p-4 rounded-lg">
+              <Text className="text-secondary-200 text-lg text-center mb-2">Tasks for {selectedUser.username}</Text>
+              <View className="flex-1 items-center">
+                <Text className="text-2xl my-2 text-white">Task Distribution</Text>
+                <Text className="text-lg my-2 text-white">{completedTasks} tasks completed, {notDoneTasks} tasks not done</Text>
+                {totalTasks > 0 ? (
+                  <>
+                    <PieChart
+                      widthAndHeight={250}
+                      series={series}
+                      sliceColor={sliceColor}
+                    />
+                    <View className="mt-5">
+                      <Text className="text-lg my-1 text-white">
+                        <Text className="text-[#22543D]">{completedTasks}</Text> / {totalTasks} tasks completed
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <Text className="text-lg text-red-800 mt-5">No tasks available</Text>
+                )}
+                <View className="flex-row mt-5 justify-center">
+                  <View className="flex-row items-center mx-2">
+                    <View className="w-5 h-5 rounded-full bg-[#22543D] mr-1" />
+                    <Text className="text-lg text-white">Completed</Text>
+                  </View>
+                  <View className="flex-row items-center mx-2">
+                    <View className="w-5 h-5 rounded-full bg-[#7F1D1D] mr-1" />
+                    <Text className="text-lg text-white">Not Done</Text>
+                  </View>
+                </View>
+                <View className="flex-row mt-5 justify-center">
+                  <Text className="text-lg text-[#22543D]">Green: <Text className='text-white'>Completed</Text></Text>
+                  <Text className="text-lg text-[#7F1D1D] ml-5">Red: <Text className='text-white'>Not Done</Text></Text>
+                </View>
               </View>
             </View>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
+      )}
 
       <Modal isVisible={isModalVisible}>
         <View className="bg-white p-4 rounded-lg">
@@ -119,15 +157,16 @@ const UserStats: React.FC = () => {
             data={users}
             keyExtractor={(item) => item.email}
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleUserSelect(item)}>
-                <Text className="text-lg">{item.username}</Text>
-                <Text className="text-sm text-gray-500">{item.email}</Text>
-              </TouchableOpacity>
+              <List.Item
+                title={item.username}
+                description={item.email}
+                onPress={() => {
+                  handleUserSelect(item);
+                }}
+              />
             )}
           />
-          <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-            <Text className="text-center text-blue-500 mt-4">Close</Text>
-          </TouchableOpacity>
+          <Button onPress={() => setIsModalVisible(false)}>Close</Button>
         </View>
       </Modal>
     </View>

@@ -319,24 +319,24 @@ export const listUserTasks = async (req: AuthenticatedRequest, res: Response) =>
 };
 
 export const updateTaskStatus = async (req: AuthenticatedRequest, res: Response) => {
-  const { email, status } = req.body;
+  const { id, email } = req.body;
 
-  if (status !== 'not done' && status !== 'completed') {
-    return res.status(400).json({ message: 'Invalid status' });
+  if (!id) {
+    return res.status(400).json({ message: 'Task ID is required' });
   }
 
   try {
     const connection = await connectToDatabase();
     const [result]: any = await connection.execute(
-      'UPDATE tasks SET status = ? WHERE assigned_to = ?',
-      [status, email]
+      'UPDATE tasks SET status = ? WHERE id = ? AND assigned_to = ?',
+      ['completed', id, email]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Task not found or not assigned to you' });
     }
 
-    res.status(200).json({ message: 'Task status updated' });
+    res.status(200).json({ message: 'Task status updated to completed' });
   } catch (error) {
     console.error('Error updating task status:', error);
     res.status(500).json({ message: 'Error updating task status' });

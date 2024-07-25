@@ -78,19 +78,25 @@ const UserStats: React.FC = () => {
     setIsModalVisible(false);
   };
 
+  const handleBackToDashboard = () => {
+    setSelectedUser(null);
+    setTasks([]);
+    router.push('/home');
+  };
+
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const notDoneTasks = tasks.filter(task => task.status === 'not done').length;
   const totalTasks = completedTasks + notDoneTasks;
 
   const series = [completedTasks, notDoneTasks];
-  const sliceColor = ['#22543D', '#7F1D1D']; // green-800 for completed, red-800 for not done
+  const sliceColor = ['#FF6347', '#4682B4']; // tomato for completed, steel blue for not done
 
   return (
     <View className="flex-1 bg-primary justify-center items-center p-5">
       <View className="absolute top-10 left-5">
         <CustomButton
           title="Back to Dashboard"
-          handlePress={() => router.push('/home')}
+          handlePress={handleBackToDashboard}
           containerStyles="bg-primary text-white px-4 py-2 mt-10 rounded-full border border-blue-500"
         />
       </View>
@@ -98,7 +104,7 @@ const UserStats: React.FC = () => {
       {isLoading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <View className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md space-y-3">
+        <View className="mt-20 bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-md space-y-3">
           <Text className="text-secondary-200 text-lg mb-2 border-b border-gray-700 pb-2 font-bold text-center">Task Stats</Text>
 
           <TouchableOpacity
@@ -110,39 +116,33 @@ const UserStats: React.FC = () => {
 
           {selectedUser && (
             <View className="bg-gray-800 p-4 rounded-lg">
-              <Text className="text-secondary-200 text-lg text-center mb-2">Tasks for {selectedUser.username}</Text>
-              <View className="flex-1 items-center">
-                <Text className="text-2xl my-2 text-white">Task Distribution</Text>
-                <Text className="text-lg my-2 text-white">{completedTasks} tasks completed, {notDoneTasks} tasks not done</Text>
-                {totalTasks > 0 ? (
-                  <>
+              <Text className="text-lg my-2 text-secondary-200 text-center">
+                Task Distribution for {selectedUser.username}
+              </Text>
+              <Text className="text-lg my-2 text-secondary-200 text-center mb-10">{completedTasks} tasks completed, {notDoneTasks} tasks not done</Text>
+              {totalTasks > 0 ? (
+                <>
+                  <View className="items-center">
                     <PieChart
                       widthAndHeight={250}
                       series={series}
                       sliceColor={sliceColor}
                     />
-                    <View className="mt-5">
-                      <Text className="text-lg my-1 text-white">
-                        <Text className="text-[#22543D]">{completedTasks}</Text> / {totalTasks} tasks completed
-                      </Text>
-                    </View>
-                  </>
-                ) : (
-                  <Text className="text-lg text-red-800 mt-5">No tasks available</Text>
-                )}
-                <View className="flex-row mt-5 justify-center">
+                  </View>
+                </>
+              ) : (
+                <Text className="text-lg text-red-800 mt-5 text-center">No tasks available</Text>
+              )}
+              <View className="mt-5">
+                <View className="flex-row justify-center">
                   <View className="flex-row items-center mx-2">
-                    <View className="w-5 h-5 rounded-full bg-[#22543D] mr-1" />
-                    <Text className="text-lg text-white">Completed</Text>
+                    <View className="w-5 h-5 rounded-full bg-[#FF6347] mr-1" />
+                    <Text className="text-lg text-secondary-200">Completed</Text>
                   </View>
                   <View className="flex-row items-center mx-2">
-                    <View className="w-5 h-5 rounded-full bg-[#7F1D1D] mr-1" />
-                    <Text className="text-lg text-white">Not Done</Text>
+                    <View className="w-5 h-5 rounded-full bg-[#4682B4] mr-1" />
+                    <Text className="text-lg text-secondary-200">Not Done</Text>
                   </View>
-                </View>
-                <View className="flex-row mt-5 justify-center">
-                  <Text className="text-lg text-[#22543D]">Green: <Text className='text-white'>Completed</Text></Text>
-                  <Text className="text-lg text-[#7F1D1D] ml-5">Red: <Text className='text-white'>Not Done</Text></Text>
                 </View>
               </View>
             </View>
